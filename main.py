@@ -1,11 +1,8 @@
 from tkinter import *
 
 class Cellife():
-    """[summary]
-    """
+
     def __init__(self):
-        """[summary]
-        """
         self.window = Tk()
         self.window.title = "Cel*life"
         self.window.geometry("1100x950")
@@ -34,6 +31,9 @@ class Cellife():
         self.create_next_button()
         self.create_prev_button()
         self.create_quit_button()
+        # CheckButton
+        self.check_value = BooleanVar()
+        self.create_check_grid()
         # Slider.
         self.create_slider()
         # Canvas.
@@ -59,6 +59,10 @@ class Cellife():
         self.quit_button = Button(self.frame_sim, text="Quit", command=self.window.quit)
         self.quit_button.pack(side=BOTTOM)
 
+    def create_check_grid(self):
+        self.show_grid = Checkbutton(self.frame_sim, variable=self.check_value, command=self._draw_grid)
+        self.show_grid.pack()
+
     def create_slider(self):
         self.res_slider = Scale(self.frame_sim ,label="Resolution", orient=HORIZONTAL, from_=70, to=5, resolution=5, command=self._draw_grid)
         self.res_slider.set(25)
@@ -68,20 +72,25 @@ class Cellife():
         self.canvas = Canvas(self.frame, bg='white', width=900, height=900)
         self.canvas.grid(row=0, column=0)
 
-    def _draw_grid(self, slider_value):
+    def _draw_grid(self, slider_value=None):
+        if slider_value == None:
+            slider_value = int(self.res_slider.get())
+        show_grid = self.check_value.get()
+
         width = int(self.canvas['width'])
         height = int(self.canvas['height'])
         # Clear canvas
         self.canvas.delete('all')
-        # Draw lines horizontals then verticals.
-        step_x = 0
-        while step_x < width:
-            self.canvas.create_line(step_x, 0, step_x, height, width=1, fill='black')
-            step_x += int(slider_value)
-        step_y = 0
-        while step_y < height:
-            self.canvas.create_line(0, step_y, width, step_y, width=1, fill='black')
-            step_y += int(slider_value)
+
+        if show_grid:  # Draw lines horizontals then verticals.
+            step_x = 0
+            while step_x < width:
+                self.canvas.create_line(step_x, 0, step_x, height, width=1, fill='black')
+                step_x += int(slider_value)
+            step_y = 0
+            while step_y < height:
+                self.canvas.create_line(0, step_y, width, step_y, width=1, fill='black')
+                step_y += int(slider_value)
         # Draw alive cells
         self.draw_cells_alive()
     
@@ -98,13 +107,12 @@ class Cellife():
         # add cell in list of alive cell
         self.cells_alive.add(pos)
 
-class Cell():
-    def __init__(self, position, size, stat=True):
-        self.pos = position
-        self.size = size
-        self.stat = True
-        self.color = 'black'
+# class Cell():
+#     def __init__(self, position, size, stat=True):
+#         self.pos = position
+#         self.size = size
+#         self.stat = True
+#         self.color = 'black'
 
-if __name__ == "__main__":
-    APP = Cellife()
-    APP.window.mainloop()
+APP = Cellife()
+APP.window.mainloop()
