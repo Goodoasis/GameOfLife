@@ -23,6 +23,9 @@ class Cellife():
         self.frame_sim.grid(pady=40, row=0, column=1, sticky=N)
         self.frame_time.pack(expand=YES)
 
+        # Core
+        self.cells_alive = set()
+
     def create_widgets(self):
         # Labels.
         self.create_title()
@@ -49,7 +52,7 @@ class Cellife():
         self.prev_button.grid(padx=3, row=0, column=0)
 
     def create_next_button(self):
-        self.next_button = Button(self.frame_time, text=">")
+        self.next_button = Button(self.frame_time, text=">", command=self.cell)
         self.next_button.grid(padx=3, row=0, column=1)
 
     def create_quit_button(self):
@@ -79,6 +82,28 @@ class Cellife():
         while step_y < height:
             self.canvas.create_line(0, step_y, width, step_y, width=1, fill='black')
             step_y += int(slider_value)
+        # Draw alive cells
+        self.draw_cells_alive()
+    
+    def draw_cells_alive(self):
+        for cell in self.cells_alive:
+            self.cell(cell)
+
+    def cell(self, pos=(20,20)):
+        """how to draw a cell, it's juste a test"""
+        size = self.res_slider.get()
+        pos_x = pos[0] * size
+        pos_y = pos[1] * size
+        self.canvas.create_rectangle(pos_x, pos_y, pos_x+size, pos_y+size, fill='black')
+        # add cell in list of alive cell
+        self.cells_alive.add(pos)
+
+class Cell():
+    def __init__(self, position, size, stat=True):
+        self.pos = position
+        self.size = size
+        self.stat = True
+        self.color = 'black'
 
 if __name__ == "__main__":
     APP = Cellife()
