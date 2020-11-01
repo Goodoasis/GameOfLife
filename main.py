@@ -33,7 +33,7 @@ class Cellife():
         self.create_quit_button()
         # CheckButton
         self.check_value = BooleanVar()
-        self.create_check_grid()
+        self.create_check_ ()
         # Slider.
         self.create_slider()
         # Canvas.
@@ -76,23 +76,24 @@ class Cellife():
         if slider_value == None:
             slider_value = int(self.res_slider.get())
         show_grid = self.check_value.get()
-
-        width = int(self.canvas['width'])
-        height = int(self.canvas['height'])
         # Clear canvas
         self.canvas.delete('all')
 
-        if show_grid:  # Draw lines horizontals then verticals.
-            step_x = 0
-            while step_x < width:
-                self.canvas.create_line(step_x, 0, step_x, height, width=1, fill='black')
-                step_x += int(slider_value)
-            step_y = 0
-            while step_y < height:
-                self.canvas.create_line(0, step_y, width, step_y, width=1, fill='black')
-                step_y += int(slider_value)
+        if show_grid: self._draw_lines(slider_value)
         # Draw alive cells
         self.draw_cells_alive()
+    
+    def _draw_lines(self, slider_value):
+        width = int(self.canvas['width'])
+        height = int(self.canvas['height'])
+        step_x = 0
+        while step_x < width:
+            self.canvas.create_line(step_x, 0, step_x, height, width=1, fill='black')
+            step_x += int(slider_value)
+        step_y = 0
+        while step_y < height:
+            self.canvas.create_line(0, step_y, width, step_y, width=1, fill='black')
+            step_y += int(slider_value)
     
     def draw_cells_alive(self):
         for cell in self.cells_alive:
