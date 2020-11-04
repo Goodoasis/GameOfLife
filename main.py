@@ -33,7 +33,7 @@ class Cellife():
         self.create_quit_button()
         # CheckButton
         self.check_value = BooleanVar()
-        self.create_check_ ()
+        self.create_check_grid()
         # Slider.
         self.create_slider()
         # Canvas.
@@ -108,12 +108,12 @@ class Cellife():
         # add cell in list of alive cell
         self.cells_alive.add(pos)
 
-# class Cell():
-#     def __init__(self, position, size, stat=True):
-#         self.pos = position
-#         self.size = size
-#         self.stat = True
-#         self.color = 'black'
+class Cell():
+    def __init__(self, position, size, stat=True):
+        self.pos = position
+        self.size = size
+        self.stat = True
+        self.color = 'black'
 
 APP = Cellife()
 APP.window.mainloop()
