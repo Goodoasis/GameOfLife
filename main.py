@@ -1,10 +1,12 @@
 from tkinter import *
 
-class Cellife():
+from gameoflife import GameOfLife
+
+class Interface():
 
     def __init__(self):
         self.window = Tk()
-        self.window.title = "Cel*life"
+        self.window.title = "Game of Life"
         self.window.geometry("1100x950")
         self.window.config(background='brown')
         # Init frames.
@@ -64,12 +66,12 @@ class Cellife():
         self.show_grid.pack()
 
     def create_slider(self):
-        self.res_slider = Scale(self.frame_sim ,label="Resolution", orient=HORIZONTAL, from_=70, to=5, resolution=5, command=self._draw_grid)
-        self.res_slider.set(25)
+        self.res_slider = Scale(self.frame_sim ,label="Resolution", orient=HORIZONTAL, from_=58, to=2, resolution=4, command=self._draw_grid)
+        self.res_slider.set(24)
         self.res_slider.pack()
 
     def create_canvas(self):
-        self.canvas = Canvas(self.frame, bg='white', width=900, height=900)
+        self.canvas = Canvas(self.frame, bg='white', width=800, height=800)
         self.canvas.grid(row=0, column=0)
 
     def _draw_grid(self, slider_value=None):
@@ -86,24 +88,29 @@ class Cellife():
     def _draw_lines(self, slider_value):
         width = int(self.canvas['width'])
         height = int(self.canvas['height'])
-        step_x = 0
-        while step_x < width:
-            self.canvas.create_line(step_x, 0, step_x, height, width=1, fill='black')
-            step_x += int(slider_value)
-        step_y = 0
-        while step_y < height:
-            self.canvas.create_line(0, step_y, width, step_y, width=1, fill='black')
-            step_y += int(slider_value)
+        centerX = int(width/2)
+        centerY = int(height/2)
+
+        stepX = centerX - (int(int(slider_value)/2))
+        while stepX < width:
+            self.canvas.create_line(stepX, 0, stepX, height, width=1, fill='black')
+            self.canvas.create_line(width-stepX, 0, width-stepX, height, width=0.5, fill='black')
+            stepX += int(slider_value)
+        stepY = centerY - (int(int(slider_value)/2))
+        while stepY < height:
+            self.canvas.create_line(0, stepY, width, stepY, width=1, fill='black')
+            self.canvas.create_line(0, height-stepY, width, height-stepY, width=0.5, fill='black')
+            stepY += int(slider_value)
     
     def draw_cells_alive(self):
         for cell in self.cells_alive:
             self.cell(cell)
 
-    def cell(self, pos=(20,20)):
+    def cell(self, pos=(10,10)):
         """how to draw a cell, it's juste a test"""
         size = self.res_slider.get()
-        pos_x = pos[0] * size
-        pos_y = pos[1] * size
+        pos_x = (pos[0] * size) - int(size/2)
+        pos_y = (pos[1] * size) - int(size/2)
         self.canvas.create_rectangle(pos_x, pos_y, pos_x+size, pos_y+size, fill='black')
         # add cell in list of alive cell
         self.cells_alive.add(pos)
@@ -115,5 +122,5 @@ class Cell():
         self.stat = True
         self.color = 'black'
 
-APP = Cellife()
+APP = Interface()
 APP.window.mainloop()

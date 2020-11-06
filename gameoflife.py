@@ -31,14 +31,14 @@ class GameOfLife:
 
     def evolution(self, cells):
         alive_cell = []
-        death_cell = []
+        empty_cell = []
         for pos in cells:
             i = pos[0]
             j = pos[1]
             cell_neighbors = self.neighbour(i, j)
 
             alive_cell.extend(cell_neighbors[0])
-            death_cell.extend(cell_neighbors[1])
+            empty_cell.extend(cell_neighbors[1])
 
         skip_cell = []
         for cell in cells:
@@ -51,12 +51,12 @@ class GameOfLife:
                 for i in range(alive_cell.count(cell)):
                     alive_cell.remove(cell)
 
-        for cell in death_cell:
+        for cell in empty_cell:
             if cell in skip_cell:
                 continue
 
             skip_cell.append(cell)
-            if death_cell.count(cell) == 3:
+            if empty_cell.count(cell) == 3:
                 self.tab[cell[0]][cell[1]] = 1
                 alive_cell.append(cell)
 
