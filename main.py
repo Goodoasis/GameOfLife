@@ -16,7 +16,8 @@ class Interface():
         # Create all of widgets.
         self.create_widgets()
         # Class Variables.
-        self.res = self.res_slider.get()
+        self.size = 8
+        # self.res = self.res_slider.get()
         # Pack.
         self.frame.pack(expand=YES)
         self.frame_sim.grid(pady=40, row=0, column=1, sticky=N)
@@ -24,6 +25,7 @@ class Interface():
 
         # Core
         self.cells_alive = set()
+        self.window.bind("<MouseWheel>",self.zoom)
 
     def create_widgets(self):
         # Labels.
@@ -37,7 +39,7 @@ class Interface():
         self.check_value = BooleanVar()
         self.create_check_grid()
         # Slider.
-        self.create_slider()
+        # self.create_slider()
         # Canvas.
         self.create_canvas()
     
@@ -65,42 +67,54 @@ class Interface():
         self.show_grid = Checkbutton(self.frame_sim, variable=self.check_value, command=self._draw_grid)
         self.show_grid.pack()
 
-    def create_slider(self):
-        self.res_slider = Scale(self.frame_sim ,label="Resolution", orient=HORIZONTAL, from_=58, to=2, resolution=4, command=self._draw_grid)
-        self.res_slider.set(24)
-        self.res_slider.pack()
+    # def create_slider(self):
+    #     """ DEactivate for a time"""
+    #     self.res_slider = Scale(self.frame_sim ,label="Resolution", orient=HORIZONTAL, from_=58, to=2, resolution=4, command=self._draw_grid)
+    #     self.res_slider.set(24)
+    #     self.res_slider.pack()
 
     def create_canvas(self):
-        self.canvas = Canvas(self.frame, bg='white', width=800, height=800)
+        self.canvas = Canvas(self.frame, bg='white', width=900, height=900, xscrollincrement=10, yscrollincrement=10)
+        self.canvas.config(scrollregion=self.canvas.bbox(ALL))
         self.canvas.grid(row=0, column=0)
+        self.sub_canvas = Canvas(self.canvas, bg='grey', width=800, height=800)
+        self.sub_canvas.place(relx=.5, rely=.5, anchor=CENTER)
 
-    def _draw_grid(self, slider_value=None):
-        if slider_value == None:
-            slider_value = int(self.res_slider.get())
+    def zoom(self, event):
+        if event.delta>0:
+            print("ZOOM IN!")
+            print(self.canvas.children)
+            self.canvas.scale("all", event.x, event.y, 1.1, 1.1)
+        elif event.delta<0:
+            print("ZOOM OUT!")
+            self.canvas.scale("all", event.x, event.y, 0.9, 0.9)
+        self.canvas.configure(scrollregion = self.canvas.bbox("all"))
+
+    def _draw_grid(self):
         show_grid = self.check_value.get()
         # Clear canvas
-        self.canvas.delete('all')
+        self.sub_canvas.delete('all')
 
-        if show_grid: self._draw_lines(slider_value)
+        if show_grid: self._draw_lines(self.size)
         # Draw alive cells
         self.draw_cells_alive()
     
-    def _draw_lines(self, slider_value):
-        width = int(self.canvas['width'])
-        height = int(self.canvas['height'])
+    def _draw_lines(self, size):
+        width = int(self.sub_canvas['width'])
+        height = int(self.sub_canvas['height'])
         centerX = int(width/2)
         centerY = int(height/2)
 
-        stepX = centerX - (int(int(slider_value)/2))
-        while stepX < width:
-            self.canvas.create_line(stepX, 0, stepX, height, width=1, fill='black')
-            self.canvas.create_line(width-stepX, 0, width-stepX, height, width=0.5, fill='black')
-            stepX += int(slider_value)
-        stepY = centerY - (int(int(slider_value)/2))
-        while stepY < height:
-            self.canvas.create_line(0, stepY, width, stepY, width=1, fill='black')
-            self.canvas.create_line(0, height-stepY, width, height-stepY, width=0.5, fill='black')
-            stepY += int(slider_value)
+        stepX = centerX - 4
+        while stepX < width*4:
+            self.sub_canvas.create_line(stepX, -(height*4), stepX, height*4, width=1, fill='black')
+            self.sub_canvas.create_line(width-stepX, -(height*4), width-stepX, height*4, width=1, fill='black')
+            stepX += self.size
+        stepY = centerY - self.size
+        while stepY < height*4:
+            self.sub_canvas.create_line(-(width*4), stepY, width*4, stepY, width=1, fill='black')
+            self.sub_canvas.create_line(-(width*4), height-stepY, width*4, height-stepY, width=1, fill='black')
+            stepY += self.size
     
     def draw_cells_alive(self):
         for cell in self.cells_alive:
@@ -108,17 +122,16 @@ class Interface():
 
     def cell(self, pos=(10,10)):
         """how to draw a cell, it's juste a test"""
-        size = self.res_slider.get()
-        pos_x = (pos[0] * size) - int(size/2)
-        pos_y = (pos[1] * size) - int(size/2)
-        self.canvas.create_rectangle(pos_x, pos_y, pos_x+size, pos_y+size, fill='black')
+        self.size = 8
+        pos_x = (pos[0] * self.size)
+        pos_y = (pos[1] * self.size)
+        self.sub_canvas.create_rectangle(pos_x, pos_y, pos_x+self.size, pos_y+self.size, fill='black')
         # add cell in list of alive cell
         self.cells_alive.add(pos)
 
 class Cell():
-    def __init__(self, position, size, stat=True):
+    def __init__(self, position, stat=True):
         self.pos = position
-        self.size = size
         self.stat = True
         self.color = 'black'
 
