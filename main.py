@@ -68,7 +68,7 @@ class Interface():
         self.quit_button.pack(side=BOTTOM)
 
     def create_check_grid(self):
-        self.show_grid = Checkbutton(self.frame_sim, variable=self.check_value, command=self._draw_grid)
+        self.show_grid = Checkbutton(self.frame_sim, variable=self.check_value, command=self.update_canvas)
         self.show_grid.pack()
 
     # def create_slider(self):
@@ -79,11 +79,22 @@ class Interface():
 
     def create_canvas(self):
         self.size = 8
-        self.canvas = Canvas(self.frame, bg='white', width=(self.size*113+2), height=(self.size*113+2),  bd=0, highlightthickness=0)
+        self.canvas = Canvas(self.frame, bg='white', width=(self.size*113+2), height=(self.size*113+2),  bd=1, highlightthickness=1)
         # self.canvas.config(scrollregion=self.canvas.bbox(ALL))
-        # self.front_canvas = Canvas(self.canvas)
-        # self.front_canvas.pack(expand=YES)
         self.canvas.grid(row=0, column=0)
+        self.canvas.bind("<Button-1>", self.mouse_click)
+        # self.front_canvas = Canvas(self.canvas, bg=None, width=(self.size*113+2), height=(self.size*113+2))
+        # self.front_canvas.pack(expand=YES)
+
+    def mouse_click(self, event):
+        # Increment de 3px for increase accuracy.
+        mouseX = event.x-3
+        mouseY = event.y-3
+        # Divid by size of cellule for translate in position in cellule case.
+        cellX = int(mouseX / self.size)
+        cellY = int(mouseY / self.size)
+        click_pos = (cellY, cellX)
+        self._draw_cell(click_pos)
     
     def create_combobox(self):
         self.shapes = sorted(list(SHAPES.keys()))
@@ -91,9 +102,9 @@ class Interface():
         self.combo.current(1)
         self.combo.pack()
         # Chaque choix de combobox appel la methode sombo_selected.
-        self.combo.bind("<<ComboboxSelected>>", self.combo_selected)
+        self.combo.bind("<<ComboboxSelected>>", self.update_canvas)
 
-    def combo_selected(self, event):
+    def combo_selected(self):
         # recupere le choix de l'utilisateur.
         choice = str(self.combo.get())
         print(f"choice= {choice}")
@@ -117,13 +128,9 @@ class Interface():
     #     self.canvas.configure(scrollregion = self.canvas.bbox("all"))
 
     def _draw_grid(self):
-        show_grid = self.check_value.get()
-        # Clear canvas
-        self.canvas.delete('all')
-        self.draw_cells()
-
-        if show_grid:
-            self._draw_lines(self.size)
+        # self.canvas.delete('all')
+        # self.draw_cells()
+        self._draw_lines(self.size)
     
     def _draw_lines(self, size):
         width = int(self.canvas['width'])
@@ -163,6 +170,13 @@ class Interface():
     
     def update_canvas(self, *args):
         print(args)
+        self.canvas.delete('all')
+        if self.check_value.get():
+            self._draw_grid()
+        choice = str(self.combo.get())
+        # Definit la position de depart du jeu de la vie grave au combobox.
+        self.init_simulation(SHAPES[choice])
+        self.draw_cells()
 
 APP = Interface()
 APP.window.mainloop()
