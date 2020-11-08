@@ -2,23 +2,23 @@ class GameOfLife:
 
     def __init__(self, tab_height, tab_width):
         # 2 Arrays: "self.tab" is main frame and "evo" is used for evolution comput.
-        self.tab = [[0 for j in range(p)] for i in range(n)]
-        self.evo = self.tab[:]
-
         self.tab_height = tab_height
         self.tab_width = tab_width
 
-    def start_pos(self, shape):
+        self.tab = [[0 for j in range(self.tab_width)] for i in range(self.tab_height)]
+        self.evo = self.tab[:]
+
+    def _start_pos(self, shape):
         for pos in shape:
             self.tab[pos[0]][pos[1]] = 1
 
-    def print_tab(self):
+    def _print_tab(self):
         print("000000000011111111112222222222333333333344444444445")
         print("012345678901234567890123456789012345678901234567890")
         for i, row in enumerate(self.tab):
             print(f"{''.join([str(cell) for cell in row])} {i}")
 
-    def neighbour(self, i, j):
+    def _neighbour(self, i, j):
         # Relative position around cell in arg.
         neighbourhood = [(i-1, j-1), (i-1, j), (i-1, j+1),(i, j-1), (i, j+1), (i+1, j-1), (i+1, j), (i+1, j+1)]
         neighbors = [pos for pos in neighbourhood if (pos[0]>=0 and pos[0]<n) and (pos[1]>=0 and pos[1]<p)]
@@ -35,7 +35,7 @@ class GameOfLife:
         for pos in cells:
             i = pos[0]
             j = pos[1]
-            cell_neighbors = self.neighbour(i, j)
+            cell_neighbors = self._neighbour(i, j)
 
             alive_cell.extend(cell_neighbors[0])
             empty_cell.extend(cell_neighbors[1])
@@ -64,10 +64,11 @@ class GameOfLife:
         return cells
 
 
-# shapes:
-SHIP = [(18, 3), (18, 4), (18, 5), (19,5), (20,4)]
-BLINKER = [(10, 22), (10, 23), (10, 24)]
-ROW10 = [(10, 18), (10, 19), (10, 20), (10, 21), (10, 22), (10, 23), (10, 24), (10, 25), (10, 26), (10, 27)]
+SHAPES = {
+    "ship": [(18, 3), (18, 4), (18, 5), (19,5), (20,4)],
+    "blinker": [(10, 22), (10, 23), (10, 24)],
+    "row10": [(10, 18), (10, 19), (10, 20), (10, 21), (10, 22), (10, 23), (10, 24), (10, 25), (10, 26), (10, 27)]
+}
 
 if __name__ == "__main__":
     from time import sleep, time
@@ -81,17 +82,17 @@ if __name__ == "__main__":
     rate = 0.19  # Durée d'attente entre les frames.
     frame = 170  # Nombre de frames a calculer.
     # Set a start postion and init cells list.
-    gof.start_pos(ROW10)
-    cells = ROW10
+    gof._start_pos(SHAPES["row10"])
+    cells = SHAPES["row10"]
 
     # Run animation.
     print(f"\nFrame: 0 -------------------------------------")
-    gof.print_tab()
+    gof._print_tab()
     start = time()
     for i in range(frame):
         print(f"\nFrame: {i+1} -------------------------------------")
         cells = gof.evolution(cells)
-        gof.print_tab()
+        gof._print_tab()
         # sleep(rate)
 
     fin = time()

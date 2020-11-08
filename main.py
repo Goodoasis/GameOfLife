@@ -1,6 +1,8 @@
 from tkinter import *
+from tkinter import ttk
+from time import sleep
 
-from gameoflife import GameOfLife
+from gameoflife import GameOfLife, SHAPES
 
 class Interface():
 
@@ -22,10 +24,10 @@ class Interface():
         self.frame.pack(expand=YES)
         self.frame_sim.grid(pady=40, row=0, column=1, sticky=N)
         self.frame_time.pack(expand=YES)
+        # self.window.bind("<MouseWheel>",self.zoom).
 
-        # Core
-        self.cells_alive = set()
-        self.window.bind("<MouseWheel>",self.zoom)
+        # Core.
+        self.core = GameOfLife(113, 113)
 
     def create_widgets(self):
         # Labels.
@@ -38,10 +40,12 @@ class Interface():
         # CheckButton
         self.check_value = BooleanVar()
         self.create_check_grid()
-        # Slider.
-        # self.create_slider()
         # Canvas.
         self.create_canvas()
+        # ComboBox.
+        self.create_combobox()
+        # # Slider.
+        # self.create_slider()
     
     def create_title(self):
         self.title = Label(self.frame, text="Welcome to cell life")
@@ -56,7 +60,7 @@ class Interface():
         self.prev_button.grid(padx=3, row=0, column=0)
 
     def create_next_button(self):
-        self.next_button = Button(self.frame_time, text=">", command=self.cell)
+        self.next_button = Button(self.frame_time, text=">")
         self.next_button.grid(padx=3, row=0, column=1)
 
     def create_quit_button(self):
@@ -68,72 +72,91 @@ class Interface():
         self.show_grid.pack()
 
     # def create_slider(self):
-    #     """ DEactivate for a time"""
+    #     """ Deactivate for a time"""
     #     self.res_slider = Scale(self.frame_sim ,label="Resolution", orient=HORIZONTAL, from_=58, to=2, resolution=4, command=self._draw_grid)
     #     self.res_slider.set(24)
     #     self.res_slider.pack()
 
     def create_canvas(self):
-        self.canvas = Canvas(self.frame, bg='white', width=900, height=900, xscrollincrement=10, yscrollincrement=10)
-        self.canvas.config(scrollregion=self.canvas.bbox(ALL))
+        self.size = 8
+        self.canvas = Canvas(self.frame, bg='white', width=(self.size*113+2), height=(self.size*113+2))
+        # self.canvas.config(scrollregion=self.canvas.bbox(ALL))
         self.canvas.grid(row=0, column=0)
-        self.sub_canvas = Canvas(self.canvas, bg='grey', width=800, height=800)
-        self.sub_canvas.place(relx=.5, rely=.5, anchor=CENTER)
+    
+    def create_combobox(self):
+        self.shapes = sorted(list(SHAPES.keys()))
+        self.combo = ttk.Combobox(self.frame_sim, state="readonly", values=self.shapes)
+        # self.combo.current()
+        self.combo.pack()
+        # Chaque choix de combobox appel la methode sombo_selected.
+        self.combo.bind("<<ComboboxSelected>>", self.combo_selected)
 
-    def zoom(self, event):
-        if event.delta>0:
-            print("ZOOM IN!")
-            print(self.canvas.children)
-            self.canvas.scale("all", event.x, event.y, 1.1, 1.1)
-        elif event.delta<0:
-            print("ZOOM OUT!")
-            self.canvas.scale("all", event.x, event.y, 0.9, 0.9)
-        self.canvas.configure(scrollregion = self.canvas.bbox("all"))
+    def combo_selected(self, event):
+        # recupere le choix de l'utilisateur.
+        choice = str(self.combo.get())
+        print(f"choice= {choice}")
+        print(SHAPES[choice])
+        # Definit la position de depart du jeu de la vie grave au combobox.
+        self.init_simulation(SHAPES[choice])
+    
+    def init_simulation(self, shape):
+        self.core._start_pos(shape)
+        self.cells = shape
+        self.draw_cells()
+
+    # def zoom(self, event):
+    #     if event.delta>0:
+    #         print("ZOOM IN!")
+    #         print(self.canvas.children)
+    #         self.canvas.scale("all", event.x, event.y, 1.1, 1.1)
+    #     elif event.delta<0:
+    #         print("ZOOM OUT!")
+    #         self.canvas.scale("all", event.x, event.y, 0.9, 0.9)
+    #     self.canvas.configure(scrollregion = self.canvas.bbox("all"))
 
     def _draw_grid(self):
         show_grid = self.check_value.get()
         # Clear canvas
-        self.sub_canvas.delete('all')
+        self.canvas.delete('all')
+        self.draw_cells()
 
-        if show_grid: self._draw_lines(self.size)
-        # Draw alive cells
-        self.draw_cells_alive()
+        if show_grid:
+            self._draw_lines(self.size)
     
     def _draw_lines(self, size):
-        width = int(self.sub_canvas['width'])
-        height = int(self.sub_canvas['height'])
-        centerX = int(width/2)
-        centerY = int(height/2)
-
-        stepX = centerX - 4
-        while stepX < width*4:
-            self.sub_canvas.create_line(stepX, -(height*4), stepX, height*4, width=1, fill='black')
-            self.sub_canvas.create_line(width-stepX, -(height*4), width-stepX, height*4, width=1, fill='black')
+        width = int(self.canvas['width'])
+        height = int(self.canvas['height'])
+        stepX = 2
+        while stepX < width + self.size :
+            self.canvas.create_line(stepX, 0, stepX, height, width=1, fill='black')
             stepX += self.size
-        stepY = centerY - self.size
-        while stepY < height*4:
-            self.sub_canvas.create_line(-(width*4), stepY, width*4, stepY, width=1, fill='black')
-            self.sub_canvas.create_line(-(width*4), height-stepY, width*4, height-stepY, width=1, fill='black')
+        stepY = 2
+        while stepY < height + self.size:
+            self.canvas.create_line(0, stepY, width, stepY, width=1, fill='black')
             stepY += self.size
-    
-    def draw_cells_alive(self):
-        for cell in self.cells_alive:
-            self.cell(cell)
+        # centerX = int(width/2)
+        # centerY = int(height/2)
+        # stepX = centerX - (self.size/2)
+        # while stepX < width*4:
+        #     self.canvas.create_line(stepX, -(height*4), stepX, height*4, width=1, fill='black')
+        #     self.canvas.create_line(width-stepX, -(height*4), width-stepX, height*4, width=1, fill='black')
+        #     stepX += self.size
+        # stepY = centerY - (self.size/2)
+        # while stepY < height*4:
+        #     self.canvas.create_line(-(width*4), stepY, width*4, stepY, width=1, fill='black')
+        #     self.canvas.create_line(-(width*4), height-stepY, width*4, height-stepY, width=1, fill='black')
+        #     stepY += self.size
 
-    def cell(self, pos=(10,10)):
+    def draw_cells(self):
+        print(f"cells = {self.cells}")
+        for cell in self.cells:
+            self._draw_cell(cell)
+
+    def _draw_cell(self, pos):
         """how to draw a cell, it's juste a test"""
-        self.size = 8
-        pos_x = (pos[0] * self.size)
-        pos_y = (pos[1] * self.size)
-        self.sub_canvas.create_rectangle(pos_x, pos_y, pos_x+self.size, pos_y+self.size, fill='black')
-        # add cell in list of alive cell
-        self.cells_alive.add(pos)
-
-class Cell():
-    def __init__(self, position, stat=True):
-        self.pos = position
-        self.stat = True
-        self.color = 'black'
+        pos_x = (pos[1] * self.size+2)
+        pos_y = (pos[0] * self.size+2)
+        self.canvas.create_rectangle(pos_x, pos_y, pos_x+self.size, pos_y+self.size, fill='black')
 
 APP = Interface()
 APP.window.mainloop()
