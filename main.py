@@ -79,14 +79,16 @@ class Interface():
 
     def create_canvas(self):
         self.size = 8
-        self.canvas = Canvas(self.frame, bg='white', width=(self.size*113+2), height=(self.size*113+2))
+        self.canvas = Canvas(self.frame, bg='white', width=(self.size*113+2), height=(self.size*113+2),  bd=0, highlightthickness=0)
         # self.canvas.config(scrollregion=self.canvas.bbox(ALL))
+        # self.front_canvas = Canvas(self.canvas)
+        # self.front_canvas.pack(expand=YES)
         self.canvas.grid(row=0, column=0)
     
     def create_combobox(self):
         self.shapes = sorted(list(SHAPES.keys()))
         self.combo = ttk.Combobox(self.frame_sim, state="readonly", values=self.shapes)
-        # self.combo.current()
+        self.combo.current(1)
         self.combo.pack()
         # Chaque choix de combobox appel la methode sombo_selected.
         self.combo.bind("<<ComboboxSelected>>", self.combo_selected)
@@ -148,6 +150,7 @@ class Interface():
         #     stepY += self.size
 
     def draw_cells(self):
+        self.cells = SHAPES[str(self.combo.get())]
         print(f"cells = {self.cells}")
         for cell in self.cells:
             self._draw_cell(cell)
@@ -157,6 +160,9 @@ class Interface():
         pos_x = (pos[1] * self.size+2)
         pos_y = (pos[0] * self.size+2)
         self.canvas.create_rectangle(pos_x, pos_y, pos_x+self.size, pos_y+self.size, fill='black')
+    
+    def update_canvas(self, *args):
+        print(args)
 
 APP = Interface()
 APP.window.mainloop()
