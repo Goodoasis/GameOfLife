@@ -63,7 +63,7 @@ class Interface():
         self.title.grid(row=0, column=1, sticky=N)
 
     def create_start_button(self):
-        self.start_button = Button(self.frame_sim, text="Start/Pause")
+        self.start_button = Button(self.frame_sim, text="Start/Pause", command=self.startEvolution)
         self.start_button.pack()
 
     def create_prev_button(self):
@@ -178,6 +178,16 @@ class Interface():
         pos_x = (pos[1] * self.size+2)
         pos_y = (pos[0] * self.size+2)
         self.canvas.create_rectangle(pos_x, pos_y, pos_x+self.size, pos_y+self.size, fill='black')
+
+    def startEvolution(self, event=None):
+        self.core._start_pos(self.cells)
+        for i in range(150):
+            self.cells = self.core.evolution(self.cells)
+            self.update_cells()
+            if len(self.cells) == 0:
+                break
+            self.canvas.update()
+            sleep(0.06)
 
 
 APP = Interface()

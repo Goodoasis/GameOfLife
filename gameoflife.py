@@ -21,7 +21,7 @@ class GameOfLife:
     def _neighbour(self, i, j):
         # Relative position around cell in arg.
         neighbourhood = [(i-1, j-1), (i-1, j), (i-1, j+1),(i, j-1), (i, j+1), (i+1, j-1), (i+1, j), (i+1, j+1)]
-        neighbors = [pos for pos in neighbourhood if (pos[0]>=0 and pos[0]<n) and (pos[1]>=0 and pos[1]<p)]
+        neighbors = [pos for pos in neighbourhood if (pos[0]>=0 and pos[0]<self.tab_height) and (pos[1]>=0 and pos[1]<self.tab_width)]
         # alive neighbours
         neighborsA = [pos for pos in neighbors if self.tab[pos[0]][pos[1]] == 1]
         # deade neighbours
@@ -73,8 +73,8 @@ SHAPES = {
 if __name__ == "__main__":
     from time import sleep, time
     # Array scale:
-    n = 21
-    p = 51
+    n = 113
+    p = 113
 
     gof = GameOfLife(n,p)
 
