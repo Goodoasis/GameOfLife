@@ -18,14 +18,14 @@ class Interface():
         self.window.title = "Game of Life"
         self.window.geometry("1100x950")
         self.window.config(background='brown')
+        # Init variables.
+        self.variables()
         # Init frames.
         self.frame = Frame(self.window, bg='red')
         self.frame_sim = Frame(self.frame, bg='green', border=1)
         self.frame_time = Frame(self.frame_sim, bg="yellow", border=1)
         # Create all of widgets.
         self.create_widgets()
-        # Class Variables.
-        self.size = 8
         # Pack.
         self.frame.pack(expand=YES)
         self.frame_sim.grid(pady=40, row=0, column=1, sticky=N)
@@ -33,6 +33,12 @@ class Interface():
         # Core.
         self.core = GameOfLife(113, 113)
         self.cells = []
+    
+    def variables(self):
+        self.size = 8
+        self.cells = []
+        self.dead_cells = []
+        self.new_cells = []
 
     def create_widgets(self):
         # Labels.
@@ -75,7 +81,6 @@ class Interface():
         self.show_grid.pack()
 
     def create_canvas(self):
-        self.size = 8
         self.canvas = Canvas(self.frame, bg='white', width=(self.size*113+2), height=(self.size*113+2),  bd=1, highlightthickness=1)
         # self.canvas.config(scrollregion=self.canvas.bbox(ALL))
         self.canvas.grid(row=0, column=0)
@@ -83,12 +88,22 @@ class Interface():
         # self.canvas.bind("<Space>", self.startanim)
 
     def create_combobox(self):
-        self.shapes = [i.capitalize() for i in list(SHAPES.keys())]
-        self.combo = ttk.Combobox(self.frame_sim, state="readonly", values=self.shapes)
+        self.combo_shapes = [i.capitalize() for i in list(SHAPES.keys())]
+        self.combo = ttk.Combobox(self.frame_sim, state="readonly", values=self.combo_shapes)
         self.combo.current(0)
         self.combo.pack()
         # Chaque choix de combobox met a jours le canvas.
-        self.combo.bind("<<ComboboxSelected>>", self.update_canvas)
+        self.combo.bind("<<ComboboxSelected>>", self.set_combo)
+    
+    def set_combo(self, event):
+        # recupere l'info du ComboBox.
+        choice = str(self.combo.get()).lower()
+        # La fome choisi devient les cellules vivante.
+        self.cells = SHAPES[choice]
+        print(f"choice = {SHAPES[choice]}")
+        print(f"cells = {self.cells}")
+        # Met a jous canvas
+        self.update_canvas()
 
     def mouse_click(self, event):
         # Increment de 3px for increase accuracy.
@@ -119,21 +134,9 @@ class Interface():
         while stepY < height + self.size:
             self.canvas.create_line(0, stepY, width, stepY, width=1, fill='grey')
             stepY += self.size
-
-    def draw_cells(self):
-        # self.cells contient tout les vivantes a dessiner.
-        self.cells = SHAPES[str(self.combo.get()).lower()]
-        # Initalisation de deux lsite qui permette de mettre à jours self.cells.
-        self.new_cells = []
-        self.dead_cells = []
-        # Dessine chaque cellule de self.cells
-        for cell in self.cells:
-           self._draw_cell(cell)
-        # Apres avoir dessiné
-        self.update_cells()
     
     def update_cells(self):
-        # Supprime de self.cells toutes celle qui sont mortes
+        # Supprime de self.cells toutes celle qui sont mortes.
         for cell in self.dead_cells:
             self.cells.remove(cell)
         # On ajoute tout les nouvelles cellules.
@@ -143,10 +146,15 @@ class Interface():
         self.new_cells.clear()
         self.dead_cells.clear()
 
+    def draw_cells(self):
+        # Dessine chaque cellule de self.cells
+        for cell in self.cells:
+           self._draw_cell(cell)
+        # Met a jours cells Apres avoir dessiné.
+        self.update_cells()
+
     def _draw_cell(self, pos, alive=True):
         """Draw a square (self.size X self.size) with position in arg."""
-        self.new_cells = []
-        self.dead_cells = []
         pos_x = (pos[1] * self.size+2)
         pos_y = (pos[0] * self.size+2)
         # Si on dessine une cellule vivante:
@@ -165,8 +173,6 @@ class Interface():
         # Draw grid if chech button is cheked.
         if self.check_value.get():
             self._draw_grid()
-        choice = str(self.combo.get()).lower()
-        # Definit la position de depart du jeu de la vie grave au combobox.
         self.draw_cells()
     
     def printo(self):
