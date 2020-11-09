@@ -32,11 +32,13 @@ class Interface():
         self.frame_time.pack(expand=YES)
         # Core.
         self.core = GameOfLife(113, 113)
-        self.cells = []
     
     def variables(self):
         self.size = 8
+        self.cellule_canvas = 904 / self.size
+        # Main liste of alive cells. 
         self.cells = []
+        # Sub-lists for born and dead cell for update self.cells.
         self.dead_cells = []
         self.new_cells = []
 
@@ -48,7 +50,7 @@ class Interface():
         self.create_next_button()
         self.create_prev_button()
         self.create_quit_button()
-        # CheckButton
+        # CheckButton.
         self.check_value = BooleanVar()
         self.create_check_grid()
         # Canvas.
@@ -61,7 +63,7 @@ class Interface():
         self.title.grid(row=0, column=1, sticky=N)
 
     def create_start_button(self):
-        self.start_button = Button(self.frame_sim, text="Start/Pause", command=self.printo)
+        self.start_button = Button(self.frame_sim, text="Start/Pause")
         self.start_button.pack()
 
     def create_prev_button(self):
@@ -81,48 +83,32 @@ class Interface():
         self.show_grid.pack()
 
     def create_canvas(self):
-        self.canvas = Canvas(self.frame, bg='white', width=(self.size*113+2), height=(self.size*113+2),  bd=1, highlightthickness=1)
-        # self.canvas.config(scrollregion=self.canvas.bbox(ALL))
+        self.canvas = Canvas(self.frame, width=(self.size*self.cellule_canvas+2), height=(self.size*self.cellule_canvas+2))
+        self.canvas.config(bg='white', bd=1, highlightthickness=1)
         self.canvas.grid(row=0, column=0)
         self.canvas.bind("<Button-1>", self.mouse_click)
-        # self.canvas.bind("<Space>", self.startanim)
 
     def create_combobox(self):
         self.combo_shapes = [i.capitalize() for i in list(SHAPES.keys())]
         self.combo = ttk.Combobox(self.frame_sim, state="readonly", values=self.combo_shapes)
         self.combo.current(0)
         self.combo.pack()
-        # Chaque choix de combobox met a jours le canvas.
+        # Each combobox event update self.cells.
         self.combo.bind("<<ComboboxSelected>>", self.set_combo)
     
     def set_combo(self, event):
-        # recupere l'info du ComboBox.
+        """ Methode called by a change on ComboBox.
+        self.cell is clear for set this choice. """
+        # et current ComboBox value.
         choice = str(self.combo.get()).lower()
-        # La fome choisi devient les cellules vivante.
-        self.cells = SHAPES[choice]
-        print(f"choice = {SHAPES[choice]}")
-        print(f"cells = {self.cells}")
-        # Met a jous canvas
+        self.cells.clear()
+        # Update self.cells
+        for pos in SHAPES[choice]:
+            self.manage_cells(pos)
         self.update_canvas()
 
-    def mouse_click(self, event):
-        # Increment de 3px for increase accuracy.
-        mouseX = event.x-3
-        mouseY = event.y-3
-        # Divid by size of cellule for translate in position in cellule case.
-        cellX = int(mouseX / self.size)
-        cellY = int(mouseY / self.size)
-        click_pos = (cellY, cellX)
-        # Si la position n'est pas dans la liste des cellules vivantes:
-        if click_pos not in self.cells:
-            self._draw_cell(click_pos)
-        else:
-            # Sinon on la redessine mais en blanc
-            self._draw_cell(click_pos, False)
-        # Puis on met a jours la liste des cellules vivante.
-        self.update_cells()
-    
     def _draw_grid(self):
+        """ Methode who draw lines and rows in accordance to self.size. """
         width = int(self.canvas['width'])
         height = int(self.canvas['height'])
         # Increment 2px for see the first line on canvas limits.
@@ -134,49 +120,65 @@ class Interface():
         while stepY < height + self.size:
             self.canvas.create_line(0, stepY, width, stepY, width=1, fill='grey')
             stepY += self.size
+
+    def mouse_click(self, event):
+        """ Methode for add ou remove a cell directly by a mouse click in canvas. """
+        # Increment de 3px for increase accuracy.
+        mouseX = event.x-3
+        mouseY = event.y-3
+        # Divid by size of cellule for translate in position in cellule case.
+        cellX = int(mouseX / self.size)
+        cellY = int(mouseY / self.size)
+        click_pos = (cellY, cellX)
+        self.manage_cells(click_pos)
+
+    def manage_cells(self, pos):
+        """ Check if cell in arg already exists for sort cell. """
+        if pos not in self.cells:
+            self.new_cells.append(pos)
+        else:
+            self.dead_cells.append(pos)
+        # self.canvas.create_rectangle(pos_x, pos_y, pos_x+self.size, pos_y+self.size, fill=color)
+        self.update_cells()
     
     def update_cells(self):
-        # Supprime de self.cells toutes celle qui sont mortes.
-        for cell in self.dead_cells:
-            self.cells.remove(cell)
-        # On ajoute tout les nouvelles cellules.
+        # On ajoute toutes les nouvelles cellules.
         for cell in self.new_cells:
             if cell not in self.cells:
                 self.cells.append(cell)
+        # Supprime de self.cells toutes celles qui sont mortes.
+        for cell in self.dead_cells:
+            self.cells.remove(cell)
         self.new_cells.clear()
         self.dead_cells.clear()
-
-    def draw_cells(self):
-        # Dessine chaque cellule de self.cells
-        for cell in self.cells:
-           self._draw_cell(cell)
-        # Met a jours cells Apres avoir dessiné.
-        self.update_cells()
-
-    def _draw_cell(self, pos, alive=True):
-        """Draw a square (self.size X self.size) with position in arg."""
-        pos_x = (pos[1] * self.size+2)
-        pos_y = (pos[0] * self.size+2)
-        # Si on dessine une cellule vivante:
-        if alive:
-            color = 'black'
-            self.new_cells.append(pos)
-        else: 
-            # Sinon:
-            color = 'white'
-            self.dead_cells.append(pos)
-        self.canvas.create_rectangle(pos_x, pos_y, pos_x+self.size, pos_y+self.size, fill=color)
+        # Met a jours le canvas.
+        self.update_canvas()
 
     def update_canvas(self, event=None):
+        """
+        Methode who erase canvas.
+        Draw grid if CheckButton is True.
+        Then draw all cell in self.cells.
+        """
         # Clear canvas before.
         self.canvas.delete('all')
-        # Draw grid if chech button is cheked.
+        # Draw grid if check button is checked.
         if self.check_value.get():
             self._draw_grid()
         self.draw_cells()
-    
-    def printo(self):
-        print(f"cells = {self.cells}")
+
+    def draw_cells(self):
+        """ Itere self.cells for draw each cell. """
+        # Dessine chaque cellule de self.cells.
+        for cell in self.cells:
+           self.draw_cell(cell)
+
+    def draw_cell(self, pos):
+        """ Draw a square with self.size and position in arg tuple(y, x)."""
+        pos_x = (pos[1] * self.size+2)
+        pos_y = (pos[0] * self.size+2)
+        self.canvas.create_rectangle(pos_x, pos_y, pos_x+self.size, pos_y+self.size, fill='black')
+
 
 APP = Interface()
 APP.window.mainloop()
