@@ -1,15 +1,11 @@
+import os
+import pprint
+import json
 from tkinter import *
 from tkinter import ttk
 from time import sleep
 
 from gameoflife import GameOfLife
-
-SHAPES = {
-    "clear": [],
-    "blinker": [(10, 22), (10, 23), (10, 24)],
-    "row10": [(10, 18), (10, 19), (10, 20), (10, 21), (10, 22), (10, 23), (10, 24), (10, 25), (10, 26), (10, 27)],
-    "ship": [(18, 3), (18, 4), (18, 5), (19,5), (20,4)]
-}
 
 class Interface():
 
@@ -21,6 +17,7 @@ class Interface():
         # Init variables.
         self.variables()
         # Init frames.
+
         self.frame = Frame(self.window, bg='red')
         self.frame_sim = Frame(self.frame, bg='green', border=1)
         self.frame_time = Frame(self.frame_sim, bg="yellow", border=1)
@@ -32,8 +29,27 @@ class Interface():
         self.frame_time.pack(expand=YES)
         # Core.
         self.core = GameOfLife(113, 113)
+        # Save shape
+
+    def quit(self):
+        self._save_shapes()
+        self.window.quit()
+
+    def load_shapes(self):
+        _json = "shapes.json"
+        with open(_json, "r") as f:
+            json_content = json.load(f)
+        for key, v in json_content.items():
+            self.SHAPES[key] = [tuple(i) for i in v]
+
+    def _save_shapes(self):
+        _json = "shapes.json"
+        with open(_json, "w") as f:
+            json.dump(self.SHAPES, f, indent=4)
     
     def variables(self):
+        self.SHAPES = {}
+        self.load_shapes()
         self.size = 8
         self.cellule_canvas = 904 / self.size
         # Main liste of alive cells. 
@@ -49,6 +65,8 @@ class Interface():
         self.create_start_button()
         self.create_next_button()
         self.create_prev_button()
+        self.create_add_custom_button()
+        self.create_remove_custom_button()
         self.create_quit_button()
         # CheckButton.
         self.check_value = BooleanVar()
@@ -74,8 +92,30 @@ class Interface():
         self.next_button = Button(self.frame_time, text=">")
         self.next_button.grid(padx=3, row=0, column=1)
 
+    def create_add_custom_button(self):
+        self.start_button = Button(self.frame_sim, text="Add this shape", command=self.add_custom)
+        self.start_button.pack()
+
+    def create_remove_custom_button(self):
+        self.start_button = Button(self.frame_sim, text="Remove selected shape", command=self.remove_custom)
+        self.start_button.pack()
+    
+    def add_custom(self):
+        new_shape = self.cells[:]
+        shape_index = len(self.SHAPES) - 4
+        if shape_index < 9:
+            name = f"Custom n°{shape_index+1}"
+            self.SHAPES[name] = new_shape
+            self.update_combobox()
+
+    def remove_custom(self):
+        selected = self.combo.get()
+        if "Custom" in selected:
+            self.SHAPES.pop(selected)
+            self.update_combobox()
+            
     def create_quit_button(self):
-        self.quit_button = Button(self.frame_sim, text="Quit", command=self.window.quit)
+        self.quit_button = Button(self.frame_sim, text="Quit", command=self.quit)
         self.quit_button.pack(side=BOTTOM)
 
     def create_check_grid(self):
@@ -89,21 +129,26 @@ class Interface():
         self.canvas.bind("<Button-1>", self.mouse_click)
 
     def create_combobox(self):
-        self.combo_shapes = [i.capitalize() for i in list(SHAPES.keys())]
-        self.combo = ttk.Combobox(self.frame_sim, state="readonly", values=self.combo_shapes)
+        combo_shapes = list(self.SHAPES.keys())
+        self.combo = ttk.Combobox(self.frame_sim, state="readonly", values=combo_shapes)
         self.combo.current(0)
         self.combo.pack()
         # Each combobox event update self.cells.
         self.combo.bind("<<ComboboxSelected>>", self.set_combo)
     
+    def update_combobox(self):
+        combo_shapes = list(self.SHAPES.keys())
+        self.combo.config(values=combo_shapes)
+        self.combo.pack()
+    
     def set_combo(self, event):
         """ Methode called by a change on ComboBox.
         self.cell is clear for set this choice. """
         # et current ComboBox value.
-        choice = str(self.combo.get()).lower()
+        choice = self.combo.get()
         self.cells.clear()
         # Update self.cells
-        for pos in SHAPES[choice]:
+        for pos in self.SHAPES[choice]:
             self.manage_cells(pos)
         self.update_canvas()
 
@@ -138,7 +183,6 @@ class Interface():
             self.new_cells.append(pos)
         else:
             self.dead_cells.append(pos)
-        # self.canvas.create_rectangle(pos_x, pos_y, pos_x+self.size, pos_y+self.size, fill=color)
         self.update_cells()
     
     def update_cells(self):
@@ -181,13 +225,13 @@ class Interface():
 
     def startEvolution(self, event=None):
         self.core._start_pos(self.cells)
-        for i in range(150):
+        for i in range(100):
             self.cells = self.core.evolution(self.cells)
             self.update_cells()
             if len(self.cells) == 0:
                 break
             self.canvas.update()
-            sleep(0.06)
+            sleep(0.09)
 
 
 APP = Interface()
